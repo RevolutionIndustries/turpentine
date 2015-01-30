@@ -3,7 +3,7 @@ Turpentine
 
 Add Varnish support to your Ruby on Rails Application.
 
-* Write Edge Side Includes using standard redner partials syntax
+* Write Edge Side Includes using standard render partials syntax
 * Automatic Varnish detection for use in dev and production
 * Clear Varnish cache using BAN and PURGE requests
 * Render ESI's using a multi-request like flow that still displays correctly for development
@@ -72,5 +72,54 @@ Add routes for your Edge Side Includes in config/routes.rb
   # ESI Rendering
   get 'esi/partials/:partial'      => 'turpentine/esi#view', as: :esi
   get 'esi/user-partials/:partial' => 'turpentine/esi#view', as: :user_esi
+```
+
+Edge Side Include Rendering
+============================
+
+
+A helper is defined for rendering esi partials the same way you'd normally render partials.
+
+```erb
+  # A typical rails partial render
+  <%= render partial: 'articles/byline', locals: {user: @article.user} %>
+
+  # Rendering the same partial using Edge Side Includes
+  # The html will be replaced with:
+  # <esi src="/esi/partials/articles-byline?esi_user_class=User&esi_user_id=10" />
+  <%= render_esi partial: 'articles/byline', locals: {user: @article.user} %>
+
+  # ESI using per-user cacheable urls (you have to set this up in Varnish VCL)
+  # The html will be replaced with:
+  # <esi src="/esi/user-partials/site-nav_top?" />
+  <%= render_esi partial: "site/nav_top", locals: {cache_per_user: true} %>
+```
+
+Rendering collections works very similarly
+
+```erb
+  # A typical rails partial render using collections
+  <%= render partial: "articles/card", collection: @related, as: :article %>
+
+  # Rendering the same partial using Edge Side Includes
+  # The html will be replaced with one esi per item in the collection:
+  # <esi src="/esi/partials/articles-card?esi_article_class=Article&esi_article_id=2002" />
+  # <esi src="/esi/partials/articles-card?esi_article_class=Article&esi_article_id=2003" />
+  # <esi src="/esi/partials/articles-card?esi_article_class=Article&esi_article_id=2004" />
+  # and so on.... one esi for each item in the collection
+  <%= render_esi partial: "articles/card", collection: @related, as: :article %>
+
+```
+
+Clearing Cache
+==============
+
+```ruby
+  # purge request for one url
+  Turpentine:purge '/some-dir/some-url'
+
+  # ban request for all tweets for tweet 200 (and any edge side includes I made)
+  Turpentine:ban '/tweets/200.*'
+  Turpentine:ban '/esi/partials/tweets-card?.*esi_tweet_id=200.*'
 ```
 
