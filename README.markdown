@@ -17,7 +17,7 @@ Turpentine was built on Rails 4.2 and I make no promises.
 Add Turpentine to your Gemfile:
 
 ```ruby
-gem 'turpentine'
+gem 'turpentine', :git => 'git@github.com:RevolutionIndustries/turpentine.git'
 ```
 
 Run bundle to install it
