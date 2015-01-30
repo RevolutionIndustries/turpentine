@@ -1,10 +1,5 @@
 module Turpentine
 
-  @@varnish_server = {
-    host: Rails.application.config.varnish['host'],
-    protocol: Rails.application.config.varnish['protocol']
-  }
-
   def self.purge (path)
     make_request path, Net::HTTP::Purge
   end
@@ -16,7 +11,9 @@ module Turpentine
   private
 
   def self.make_request(path, request_method)
-    base = "#{@@varnish_server[:protocol]}://#{@@varnish_server[:host]}"
+    host =  Rails.application.config.turpentine['host']
+    protocol = Rails.application.config.turpentine['protocol']
+    base = "#{protocol}://#{host}"
     uri = URI.parse "#{base}#{path}"
 
     Rails.logger.info "#{request_method::METHOD}: #{base}#{path}"
