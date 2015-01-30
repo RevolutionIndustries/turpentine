@@ -37,7 +37,7 @@ module Turpentine
     private
 
     def move_varnish_header_into_cookie
-      key = '_howtune_session'
+      key = Rails.application.config.turpentine['session_name']
       header = "HTTP_X_#{key.upcase}"
       if request.headers[header]
         request.headers['HTTP_COOKIE'] = "#{key}=#{request.headers[header]}"

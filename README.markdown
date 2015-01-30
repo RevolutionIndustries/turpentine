@@ -31,6 +31,7 @@ development:
   debug_render: false # setting to true will render any generated esi tags before the response is sent (slow)
   host: 'localhost:8080' # for ban and purge requests
   protocol: 'http' # for ban and purge requests
+  session_name: 'my_session' # name of the session cookie to intercept
 
 test:
 
