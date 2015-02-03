@@ -1,3 +1,5 @@
+require 'turpentine/railtie' if defined?(Rails)
+
 module Turpentine
 
   def self.purge (path)

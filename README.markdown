@@ -34,27 +34,26 @@ development:
   session_name: 'my_session' # name of the session cookie to intercept
 
 test:
+  enabled: true
+  force_on: false
+  debug_render: false
+  host: 'localhost:8080'
+  protocol: 'http'
+  session_name: 'my_session'
 
 production:
+  enabled: true
+  force_on: false
+  debug_render: false
+  host: 'localhost:8080'
+  protocol: 'http'
+  session_name: 'my_session'
 
 ```
 
-Load the Turpentine config in your in config/application.rb
+Add ESI Support to your controllers.  Include it in any controller that may need it, or if it's needed everywhere, the application controller in app/controllers/application_controller.rb
 
 ```ruby
-module MyApplication
-  class Application < Rails::Application
-
-    config.turpentine = config_for :turpentine
-
-   end
-end
-```
-
-Add ESI Support to your controllers in app/controllers/application_controller.rb
-
-```ruby
-require 'turpentine/esi_support'
 class ApplicationController < ActionController::Base
   include Turpentine::EsiSupport
 ```
@@ -62,7 +61,6 @@ class ApplicationController < ActionController::Base
 Add ESI Rendering to app/helpers/application_helper.rb
 
 ```ruby
-require 'turpentine/esi_renderable'
 module ApplicationHelper
   include Turpentine::EsiRenderable
 ```
