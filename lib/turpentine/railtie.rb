@@ -1,5 +1,5 @@
 module Turpentine
-  class Railtie < Rails::Railtie
+  class Engine < Rails::Engine
 
     initializer "turpentine.configure_rails_initialization" do |app|
       # load config
@@ -8,7 +8,7 @@ module Turpentine
       # require classes needed to use Turpentine
       require 'turpentine/esi_support'
       require 'turpentine/esi_renderable'
-      require 'turpentine/esi_controller'
+      # require 'turpentine/esi_controller'
     end
   end
 end
