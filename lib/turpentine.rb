@@ -13,6 +13,7 @@ module Turpentine
   private
 
   def self.make_request(path, request_method)
+    return unless Rails.application.config.turpentine['enabled']
     host =  Rails.application.config.turpentine['host']
     protocol = Rails.application.config.turpentine['protocol']
     base = "#{protocol}://#{host}"
