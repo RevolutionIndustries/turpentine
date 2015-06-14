@@ -19,15 +19,18 @@ module Turpentine
     base = "#{protocol}://#{host}"
     uri = URI.parse "#{base}#{path}"
 
-    Rails.logger.info "#{request_method::METHOD}: #{base}#{path}"
-    Net::HTTP.start(uri.host, uri.port) do |http|
-      presp = http.request request_method.new uri.request_uri
-      puts "#{presp.code}: #{presp.message}"
-      unless (200...400).include? presp.code.to_i
-        Rails.logger.error "A problem occurred. PURGE was not performed."
-      end
-    end
+    Rails.logger.info "Turpentine: #{request_method::METHOD}: #{base}#{path}"
 
+    begin
+      Net::HTTP.start(uri.host, uri.port) do |http|
+        presp = http.request request_method.new uri.request_uri
+        unless (200...400).include? presp.code.to_i
+          raise "responce code #{presp.code}"
+        end
+      end
+    rescue
+      raise "Turpentine cache delete issue: #{request_method::METHOD}: #{base}#{path}"
+    end
   end
 
 end
