@@ -14,18 +14,20 @@ module Turpentine
 
   def self.make_request(path, request_method)
     return unless Rails.application.config.turpentine['enabled']
-    host =  Rails.application.config.turpentine['host']
-    protocol = Rails.application.config.turpentine['protocol']
-    base = "#{protocol}://#{host}"
-    uri = URI.parse "#{base}#{path}"
+    host      = Rails.application.routes.default_url_options[:host]
+    vhost     = Rails.application.config.turpentine['host']
+    vprotocol = Rails.application.config.turpentine['protocol']
+    vbase     = "#{vprotocol}://#{vhost}"
+    vuri      = URI.parse "#{vbase}#{path}"
 
     Rails.logger.info "Turpentine: #{request_method::METHOD}: #{base}#{path}"
 
     begin
-      Net::HTTP.start(uri.host, uri.port) do |http|
-        presp = http.request request_method.new uri.request_uri
-        unless (200...400).include? presp.code.to_i
-          raise "responce code #{presp.code}"
+      Net::HTTP.start(vuri.host, vuri.port) do |http|
+        req = request_method.new(vuri.request_uri, initheader = {'Host' => host})
+        resp = http.request(req)
+        unless (200...400).include? resp.code.to_i
+          raise "responce code #{resp.code}"
         end
       end
     rescue
