@@ -20,7 +20,7 @@ module Turpentine
     vbase     = "#{vprotocol}://#{vhost}"
     vuri      = URI.parse "#{vbase}#{path}"
 
-    Rails.logger.info "Turpentine: #{request_method::METHOD}: #{base}#{path}"
+    Rails.logger.info "Turpentine: #{request_method::METHOD}: #{vbase}#{path}"
 
     begin
       Net::HTTP.start(vuri.host, vuri.port) do |http|
@@ -31,7 +31,7 @@ module Turpentine
         end
       end
     rescue
-      raise "Turpentine cache delete issue: #{request_method::METHOD}: #{base}#{path}"
+      raise "Turpentine cache delete issue: #{request_method::METHOD}: #{vbase}#{path}"
     end
   end
 
