@@ -26,8 +26,12 @@ module Turpentine
       Net::HTTP.start(vuri.host, vuri.port) do |http|
         req = request_method.new(vuri.request_uri, initheader = {'Host' => host})
         resp = http.request(req)
-        unless (200...400).include? resp.code.to_i
-          raise "responce code #{resp.code}"
+
+        case resp.code.to_i
+        when 200...399
+          Rails.logger.info resp.body
+        else
+          Rails.logger.warn resp.body
         end
       end
     rescue
