@@ -34,7 +34,7 @@ module Turpentine
           Rails.logger.warn resp.body
         end
       end
-    rescue Exception => e
+    rescue => e
       raise "Turpentine cache delete issue: #{request_method::METHOD}: #{vbase}#{path} #{e.message}"
     end
   end
