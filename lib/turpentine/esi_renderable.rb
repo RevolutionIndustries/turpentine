@@ -14,9 +14,9 @@ module Turpentine
       # insert varnish esi markup
       if (@@esi_enabled and request.headers["HTTP_X_VARNISH"]) or @@esi_force_on
         if options.has_key? :collection
-          return esi_render_collection(options, extra_options, &block).html_safe
+          return markup_for_collection(options, extra_options, &block).html_safe
         else
-          return esi_render_one(options, extra_options, &block).html_safe
+          return markup_for_one(options, extra_options, &block).html_safe
         end
 
       # or just insert the regular markup
@@ -29,37 +29,39 @@ module Turpentine
       end
     end
 
-    private
+    def src_path_for(options = nil, extra_options = {}, &block)
 
-    def locals_to_query(locals)
-      model_keys = {}
-      locals.each do |key, value|
-        if value.is_a? ActiveRecord::Base
-          model_keys["esi_#{key}_class"] = value.class.name
-          model_keys["esi_#{key}_id"] = value.id
-          locals.except!(key)
-        end
-      end
-      URI.encode_www_form(locals.merge(model_keys))
-    end
+      # base path
+      path = "/esi/"
 
-    def esi_render_one(options = nil, extra_options = {}, &block)
-      # show edge side include for varnish
-
+      # user specific?
       if options[:locals] and options[:locals][:cache_per_user]
-        path = "/esi/user-partials/#{options[:partial].parameterize}"
+        path += "user-partials/"
       else
-        path = "/esi/partials/#{options[:partial].parameterize}"
+        path += "partials/"
       end
 
+      # partial name
+      path += options[:partial].parameterize
+
+      # optional variables
       if options.has_key? 'locals'
-        # add locals into the get request
         path += '?' + locals_to_query(options[:locals].except(:cache_per_user))
       end
+
+      path
+    end
+
+    private
+
+    # build the esi include tag with url variables we need to render the partial
+    def markup_for_one(options = nil, extra_options = {}, &block)
+      path = src_path_for(options, extra_options, &block)
       "<esi:include src=\"#{path}\" >"
     end
 
-    def esi_render_collection(options = nil, extra_options = {}, &block)
+    # build a bunch of esi includes
+    def markup_for_collection(options = nil, extra_options = {}, &block)
       result = ''
 
       # convert render_esi partial: 'my/tubs', collection: @articles, as: article
@@ -74,9 +76,21 @@ module Turpentine
           filtered_options[:locals][options[:as]] = item
         end
 
-        result += esi_render_one filtered_options, extra_options, &block
+        result += markup_for_one(filtered_options, extra_options, &block)
       end
       return result
+    end
+
+    def locals_to_query(locals)
+      model_keys = {}
+      locals.each do |key, value|
+        if value.is_a? ActiveRecord::Base
+          model_keys["esi_#{key}_class"] = value.class.name
+          model_keys["esi_#{key}_id"] = value.id
+          locals.except!(key)
+        end
+      end
+      URI.encode_www_form(locals.merge(model_keys))
     end
 
   end
