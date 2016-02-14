@@ -1,13 +1,15 @@
 require 'turpentine/railtie' if defined?(Rails)
 
 module Turpentine
+  @@delay = true
+  @@requests = Hash.new
 
-  def self.purge (path)
-    make_request path, Net::HTTP::Purge
+  def self.purge(path)
+    add_request path, Net::HTTP::Purge
   end
 
-  def self.ban (path)
-    make_request path, Net::HTTP::Ban
+  def self.ban(path)
+    add_request path, Net::HTTP::Ban
   end
 
   def self.src_path_for(options = nil, extra_options = {}, &block)
@@ -33,6 +35,14 @@ module Turpentine
     path
   end
 
+  def self.flush_requests
+    @@requests.each_value do |uri_hash|
+      self.make_request(uri_hash[:uri], uri_hash[:method])
+    end
+    @@requests = Hash.new
+    nil
+  end
+
   private
 
   def self.locals_to_query(locals)
@@ -47,19 +57,30 @@ module Turpentine
     URI.encode_www_form(locals.merge(model_keys))
   end
 
-  def self.make_request(path, request_method)
-    return unless Rails.application.config.turpentine['enabled']
-    host      = Rails.application.routes.default_url_options[:host]
-    vhost     = Rails.application.config.turpentine['host']
-    vprotocol = Rails.application.config.turpentine['protocol']
-    vbase     = "#{vprotocol}://#{vhost}"
-    vuri      = URI.parse "#{vbase}#{path}"
+  def self.add_request(path, method)
+    host     = Rails.application.config.turpentine['host']
+    protocol = Rails.application.config.turpentine['protocol']
+    base     = "#{protocol}://#{host}"
+    uri      = "#{base}#{path}"
 
-    Rails.logger.info "Turpentine: #{request_method::METHOD}: #{vbase}#{path}"
+    if @@delay
+      @@requests["#{method}#{uri}"] = {uri: uri, method: method}
+    else
+      self.make_request(uri, method)
+    end
+  end
+
+  def self.make_request(path, method)
+    return unless Rails.application.config.turpentine['enabled']
+
+    host = Rails.application.routes.default_url_options[:host]
+
+    Rails.logger.info "Turpentine: #{method}: #{path}"
 
     begin
-      Net::HTTP.start(vuri.host, vuri.port) do |http|
-        req = request_method.new(vuri.request_uri, initheader = {'Host' => host})
+      uri = URI.parse path
+      Net::HTTP.start(uri.host, uri.port) do |http|
+        req = method.new(uri.request_uri, initheader = {'Host' => host})
         resp = http.request(req)
 
         case resp.code.to_i
@@ -70,7 +91,7 @@ module Turpentine
         end
       end
     rescue => e
-      raise "Turpentine cache delete issue: #{request_method::METHOD}: #{vbase}#{path} #{e.message}"
+      Rails.logger.warn "Turpentine cache delete issue: #{method}: #{path} #{e.message}"
     end
   end
 
