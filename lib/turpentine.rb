@@ -1,4 +1,5 @@
 require 'turpentine/railtie' if defined?(Rails)
+require 'net/http'
 
 module Turpentine
   @@delay = true
