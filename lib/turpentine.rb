@@ -81,7 +81,7 @@ module Turpentine
     begin
       uri = URI.parse path
       Net::HTTP.start(uri.host, uri.port) do |http|
-        req = method.new(uri.request_uri, initheader = {'Host' => host})
+        req = method.new(uri.request_uri, {'Host' => host})
         resp = http.request(req)
 
         case resp.code.to_i

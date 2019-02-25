@@ -1,0 +1,16 @@
+default: &default
+  enabled: <%= ENV['TURPENTINE_ENABLED'] == "true"  %>
+  force_on: <%= ENV['TURPENTINE_FORCE_ON'] == "true" %>
+  debug_render: <%= ENV['TURPENTINE_DEBUG_RENDER'] == "true" %>
+  host: <%= ENV['TURPENTINE_HOST'] %>
+  protocol: <%= ENV['TURPENTINE_PROTOCOL'] %>
+  session_name: <%= ENV['TURPENTINE_SESSION_NAME'] %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

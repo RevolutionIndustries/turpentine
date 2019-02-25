@@ -4,10 +4,10 @@ module Turpentine
 
     included do
       if Rails.application.config.turpentine['enabled']
-        before_filter :move_varnish_header_into_cookie
+        before_action :move_varnish_header_into_cookie
 
         if Rails.application.config.turpentine['debug_render']
-          after_filter :expand_response_esi
+          after_action :expand_response_esi
         end
       end
     end
