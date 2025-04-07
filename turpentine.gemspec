@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.email       = ['iturgeon@gmail.com']
   s.homepage    = 'https://github.com/RevolutionIndustries/turpentine'
   s.summary     = 'Ruby on Rails tools for Varnish.'
-  s.description = 'Ruby on Rails tools for Varnish.  Build edge side includes with partials and clear Varnish cash using BAN and PURGE requests.'
+  s.description = 'Ruby on Rails tools for Varnish.  Build edge side includes with partials and clear Varnish cache using BAN and PURGE requests.'
   s.license     = 'MIT'
 
   s.files = Dir['{app,config,db,lib}/**/*', 'MIT-LICENSE', 'Rakefile', 'README.rdoc']
