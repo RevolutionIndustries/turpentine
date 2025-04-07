@@ -4,10 +4,16 @@ module Turpentine
 
     included do
       if Rails.application.config.turpentine['enabled']
-        before_filter :move_varnish_header_into_cookie
+        if Gem::Version.new(Rails::VERSION::STRING) > Gem::Version.new('5.0.0')
+          # rails version over 5.0.0
+          before_action :move_varnish_header_into_cookie
 
-        if Rails.application.config.turpentine['debug_render']
-          after_filter :expand_response_esi
+          after_action :expand_response_esi if Rails.application.config.turpentine['debug_render']
+        else
+          # rails version over 4.2.x
+          before_filter :move_varnish_header_into_cookie
+
+          after_filter :expand_response_esi if Rails.application.config.turpentine['debug_render']
         end
       end
     end
@@ -20,11 +26,11 @@ module Turpentine
       # collect all the values into our objects hash
       locals.each do |key, value|
         match = key.to_s.match(/esi_(.+)_(.+)/)
-        unless match.nil?
-          remove_keys = key.to_sym
-          this_obj = objects[match[1]] ||= {}
-          this_obj[match[2]] = value
-        end
+        next if match.nil?
+
+        remove_keys = key.to_sym
+        this_obj = objects[match[1]] ||= {}
+        this_obj[match[2]] = value
       end
 
       # locate the objects we found
@@ -39,12 +45,12 @@ module Turpentine
     def move_varnish_header_into_cookie
       key = Rails.application.config.turpentine['session_name']
       header = "HTTP_X_#{key.upcase}"
-      if request.headers[header] && !request.headers['HTTP_COOKIE']&.starts_with?(key)
-        request.headers['HTTP_COOKIE'] = "#{key}=#{request.headers[header]}"
-      end
+      return unless request.headers[header] && !request.headers['HTTP_COOKIE']&.starts_with?(key)
+
+      request.headers['HTTP_COOKIE'] = "#{key}=#{request.headers[header]}"
     end
 
-    def expand_response_esi()
+    def expand_response_esi
       response.body = expand_esi_in response.body
     end
 
@@ -52,7 +58,7 @@ module Turpentine
       contents = {}
 
       # recursively render each partial to a string
-      text.scan(/(\<esi:include\s+src\=\"(.*?)\"\s*\>)/) do |m|
+      text.scan(/(<esi:include\s+src="(.*?)"\s*>)/) do |m|
         unless contents.has_key? m[0]
           logger.info "debug rendering inline esi for #{m[1]}"
 
@@ -62,13 +68,13 @@ module Turpentine
       end
 
       # replace text with the recursivly rendered esi text
-      contents.each {|key, value| text = text.gsub key, value}
+      contents.each { |key, value| text = text.gsub key, value }
 
-      return text
+      text
     end
 
     def esi_option_hash(path)
-      uri = URI('http://site.com'+path)
+      uri = URI('http://site.com' + path)
       hash = Rack::Utils.parse_query(uri.query).symbolize_keys
       hash[:partial] = uri.path.split('/').last.gsub('-', '/')
       hash
@@ -79,7 +85,7 @@ module Turpentine
       # locals = options.except(:partial, :as, :class, :id)
       locals = params_to_locals options.except(:partial)
 
-      render_to_string partial: options[:partial].gsub(/\-/, '/'), locals: locals
+      render_to_string partial: options[:partial].gsub(/-/, '/'), locals: locals
     end
   end
 end
