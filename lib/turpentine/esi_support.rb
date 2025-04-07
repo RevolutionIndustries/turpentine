@@ -4,20 +4,17 @@ module Turpentine
 
     included do
       if Rails.application.config.turpentine['enabled']
-        if(Gem::Version.new(Rails::VERSION::STRING) > Gem::Version.new('5.0.0'))
-           # rails version over 5.0.0
-           before_action :move_varnish_header_into_cookie
+        if Gem::Version.new(Rails::VERSION::STRING) > Gem::Version.new('5.0.0')
+          # rails version over 5.0.0
+          before_action :move_varnish_header_into_cookie
 
-           if Rails.application.config.turpentine['debug_render']
-             after_action :expand_response_esi
-           end
-         else
-           # rails version over 4.2.x
-           before_filter :move_varnish_header_into_cookie
+          after_action :expand_response_esi if Rails.application.config.turpentine['debug_render']
+        else
+          # rails version over 4.2.x
+          before_filter :move_varnish_header_into_cookie
 
-           if Rails.application.config.turpentine['debug_render']
-             after_filter :expand_response_esi
-           end
+          after_filter :expand_response_esi if Rails.application.config.turpentine['debug_render']
+        end
       end
     end
 
